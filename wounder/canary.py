@@ -254,7 +254,9 @@ def manifest_for(case: dict, producer: dict, created: str, corpus: list[dict]) -
     return manifest_declared(
         case=case, producer=producer, created=created, checks=["mechanical.canary"],
         claim=f"The wounder declares {len(ids)} planted-defect canaries and promises to report every one",
-        extra={"canary_count": len(ids), "case_ids": ids[:100], "corpus_sha256": corpus_digest(corpus)})
+        extra={"canary_count": len(ids), "case_ids": ids[:100], "corpus_sha256": corpus_digest(corpus),
+               # juridicator rule R9 (CONTRACT.md rule 8): every one of these subjects must be reported, not just the kind
+               "expected": [{"kind": "mechanical.canary", "subject": {"declaration": i}} for i in ids[:60]]})
 
 
 def judge(entry: dict, result: GateResult) -> tuple[str, str]:

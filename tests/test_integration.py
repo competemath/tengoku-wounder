@@ -114,22 +114,25 @@ class AgainstTheJuridicator(unittest.TestCase):
         self.assertEqual(v["decision"], "HOLD", v["reasons"])
         self.assertTrue(any(r["rule"] == "R3" for r in v["reasons"]))
 
-    def test_a_gate_that_errors_on_one_case_only_raises_scrutiny_it_does_not_hold(self):
-        """Documents the statute as it is: R9 and R3 work per kind, so one inconclusive canary among passes is T2
-        (scrutiny up), not a hold. The wounder therefore checks completeness itself (canary.missing_cases) before publishing."""
+    def test_a_gate_that_errors_on_one_case_holds_the_case(self):
+        """Statute R12 (version 2): a crash on one planted defect is not a pass, and the case is held for a re-run."""
         perfect = PerfectGate(corpus())
         target = tuple(sorted(next(e for e in corpus() if e["id"] == "sorry_present")["files"].items()))
         records = self.full_run(lambda case: canary.GateResult(False, ["boom"], error=True) if tuple(sorted(case["files"].items())) == target else perfect(case))
         v = judge(records)
-        self.assertEqual((v["decision"], v["tier"]), ("ACCEPT", 3), "if this fails the statute closed the gap: update SECURITY.md W5")
+        self.assertEqual(v["decision"], "HOLD", v["reasons"])
+        self.assertTrue(any(r["rule"] == "R12" for r in v["reasons"]))
         self.assertEqual(sum(r["outcome"] == "inconclusive" for r in records), 1)
         self.assertEqual(canary.missing_cases(corpus(), [r for r in records if r["outcome"] != "inconclusive"]), ["sorry_present"])
 
-    def test_an_incomplete_report_is_detected_by_the_wounder_even_though_the_statute_looks_per_kind(self):
+    def test_an_incomplete_report_holds_the_case_by_subject(self):
+        """Statute R9 (version 2): the manifest lists every canary subject, so 14 of 15 is a hold, not an accept."""
         records = self.full_run(PerfectGate(corpus()))
         partial = records[:-1]
         self.assertEqual(canary.missing_cases(corpus(), partial), [corpus()[-1]["id"]])
-        self.assertEqual(judge(partial)["decision"], "ACCEPT", "if this fails the statute closed the gap: update SECURITY.md W5")
+        v = judge(partial)
+        self.assertEqual(v["decision"], "HOLD", v["reasons"])
+        self.assertTrue(any(r["rule"] == "R9" for r in v["reasons"]))
 
     def test_a_manifest_alone_never_yields_acceptance_whoever_signs_it(self):
         """Producer identity is only a string today (juridicator SECURITY.md R5); a declaration with no results is a hold."""
