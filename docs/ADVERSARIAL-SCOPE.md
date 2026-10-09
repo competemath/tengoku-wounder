@@ -89,3 +89,11 @@ The founding example is the Leak verifier incident: an acceptance gate that neve
 so a script declaring its own axiom was reported as fully verified. That incident is the reason `axiom_declared` is the
 first canary, and `axiom_via_metaprogram` is its generalisation: the gate must look at what the proof depends on, not at
 what the text says. A canary of that shape is how the gap would have shown up before anyone relied on the gate.
+
+## Layers
+
+A real pipeline has several gates, each responsible for different defects. `run-canaries --layer L` runs only the cases the
+layer is responsible for, so a gate is judged on what it is for: `static` (a text lint, with no compiler), `axioms` (the
+compile step's axiom collection, which is what sees a `sorry`), `vacuity`, `fidelity` and `tree` (a name shadowed or a
+statement duplicated in the existing tree). The mapping is `LAYERS` in `wounder/canary.py`. Tengoku's content lint, for
+example, rejects an axiom added by a metaprogram and does not read `sorry` at all, on purpose; the `axioms` layer owns that case.

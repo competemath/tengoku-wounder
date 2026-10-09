@@ -418,3 +418,41 @@ class CommandGateTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Layers(unittest.TestCase):
+    def test_every_case_has_a_layer_and_the_static_layer_is_what_a_text_gate_can_be_asked(self):
+        layers = {e["id"]: canary.layer_of(e) for e in corpus()}
+        self.assertEqual({v for v in layers.values()}, {"static", "axioms", "vacuity", "fidelity", "tree"})
+        self.assertEqual(layers["vacuous_hypotheses"], "vacuity")
+        self.assertEqual(layers["statement_type_drift"], "fidelity")
+        self.assertEqual({k for k, v in layers.items() if v == "tree"}, {"shadowed_name", "duplicate_statement"})
+        self.assertEqual({k for k, v in layers.items() if v == "axioms"}, {"sorry_present", "sorry_hidden_in_term"})
+        static = {k for k, v in layers.items() if v == "static"}
+        self.assertIn("axiom_via_metaprogram", static)  # an allow-list lint is expected to catch this one
+        self.assertIn("comment_hidden_directive", static)
+
+    def test_cli_layer_flag_scopes_the_run_and_its_manifest(self):
+        import contextlib
+        import io
+        import tempfile
+
+        from wounder.cli import main
+
+        with tempfile.TemporaryDirectory() as d:
+            out = os.path.join(d, "o")
+            with contextlib.redirect_stdout(io.StringIO()):
+                code = main(["run-canaries", "--corpus", CORPUS_DIR, "--reference-gate", "--layer", "static", "--repo", "r", "--head", HEAD,
+                             "--class", "gate", "--out", out, "--created", NOW])
+            self.assertEqual(code, 0)
+            def read(name):
+                with open(os.path.join(out, name), encoding="utf-8") as fh:
+                    return json.load(fh)
+
+            subjects = sorted(read(f)["subject"]["declaration"] for f in os.listdir(out) if "mechanical-canary" in f)
+            self.assertEqual(subjects, sorted(e["id"] for e in corpus() if canary.layer_of(e) == "static"))
+            manifest = read("00-manifest-declared.json")
+            self.assertEqual(len(manifest["details"]["expected"]), len(subjects))
+            with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+                main(["run-canaries", "--corpus", CORPUS_DIR, "--reference-gate", "--layer", "nonsense", "--repo", "r", "--head", HEAD,
+                      "--class", "gate", "--out", out + "2"])

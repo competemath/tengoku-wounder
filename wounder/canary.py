@@ -42,6 +42,17 @@ CATEGORIES = (
 )
 # Categories whose correct verdict is "accept": over-blocking is a defect of the gate too.
 ACCEPT_CATEGORIES = frozenset({"comment_hidden_directive", "known_good"})
+# Which layer of a real pipeline is responsible for a category. A gate that only reads text (a static lint) cannot be
+# asked to catch a vacuous theorem, and a run scoped to its own layer is judged on what it is for. Everything not listed
+# here is the "static" layer. ("axioms": the compile step's axiom collection sees sorryAx; Tengoku's content lint
+# deliberately does not read sorry.) `--layer` on the CLI selects cases by layer; no flag means every layer (a full gate).
+LAYERS = {"sorry_present": "axioms", "sorry_hidden_in_term": "axioms", "vacuous_hypotheses": "vacuity", "statement_type_drift": "fidelity", "shadowed_name": "tree", "duplicate_statement": "tree"}
+
+
+def layer_of(entry: dict) -> str:
+    return LAYERS.get(entry["category"], "static")
+
+
 CASE_KEYS = frozenset({"id", "category", "description", "expected", "why", "files"})
 FILE_NAME = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,60}\.lean$")
 MAX_FILES = 4

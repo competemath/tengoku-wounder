@@ -77,6 +77,10 @@ def _run_canaries(a: argparse.Namespace) -> int:
         corpus = [c for c in corpus if c["id"] in set(a.only)]
         if len(corpus) != len(set(a.only)):
             raise BadInput("--only names a case that is not in the corpus")
+    if a.layer:
+        corpus = [c for c in corpus if canary.layer_of(c) in set(a.layer)]
+        if not corpus:
+            raise BadInput("--layer selects no case")
     if bool(a.gate_cmd) == bool(a.reference_gate):
         raise BadInput("give exactly one of --gate-cmd or --reference-gate")
     if a.gate_cmd:
@@ -201,6 +205,8 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--gate-cmd", help="the gate under test; the case directory is appended as the last argument")
     r.add_argument("--reference-gate", action="store_true", help="use the built-in text-level reference gate")
     r.add_argument("--only", action="append", help="run just this case id (repeatable)")
+    r.add_argument("--layer", action="append", choices=["static", "axioms", "vacuity", "fidelity", "tree"],
+                   help="run only the cases this layer of the pipeline is responsible for (repeatable); default: all")
     r.add_argument("--timeout", type=float, default=canary.DEFAULT_TIMEOUT)
     r.add_argument("--no-manifest", action="store_true", help="the manifest was already declared by `manifest`")
     _case_args(r)
