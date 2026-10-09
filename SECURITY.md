@@ -53,8 +53,9 @@ been through an outside audit.
 - **W7 Proposed cases still pass through a tired reviewer.** Quarantine and validation make bad proposals harmless to run,
   not impossible to promote. Cases are kept tiny so review is quick, code owners review the pull request, and a case that
   reads like an evasion recipe is not promoted (`docs/ADVERSARIAL-SCOPE.md`).
-- **W8 The audit lottery's publication step is not built.** Without the ledger entry for the commitment before a batch and
-  the reveal after it, grinding is not prevented (juridicator R3). The salt file is plain text on the operator's machine.
+- **W8 The salt holder can withhold the reveal.** Batches are fixed by the ledger (`lottery_book.py`) and unbatched verdicts
+  are always audited, so grinding is prevented. A batch that never gets its reveal stays pending and is listed, but nothing
+  forces the reveal (juridicator R3). The salt file is plain text on the operator's machine.
 - **W9 The budget file is local and trusting.** It stops accidents and runaway loops, not someone with write access to the
   file. It is locked against concurrent processes on one machine (POSIX `flock`), not across machines.
 - **W10 Identity and signing.** Records name `tengoku-wounder` as producer, but nothing proves it (juridicator R5). A

@@ -79,5 +79,6 @@ resource limits where present.
 
 ## Status
 
-A seed: the harness and its tests are real; the corpus is small by design; the real gates, the sandbox runner and any AI
-backend are not wired in. Private while it matures.
+A working seed: the harness, the ledger-fixed audit lottery (`lottery plan`) and their tests are real; the corpus is small by
+design; the real gates, the sandbox runner and any AI backend are not wired in. The whole flow is in the juridicator's
+`docs/PIPELINE.md`. Apache-2.0.

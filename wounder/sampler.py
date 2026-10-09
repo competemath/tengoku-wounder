@@ -14,8 +14,7 @@ THE FIX, COMMIT AND REVEAL. Before any case in a batch is judged, publish `commi
 in the ledger. The author sees the commitment, which reveals nothing about the draws. After the batch is judged, reveal the
 salt; anyone checks `verify_salt(commitment, salt)` and recomputes every draw. The salt cannot be changed after the fact
 (the hash is already public) and could not be known while commits were being made. Which batch a commit belongs to must be
-fixed by the ledger, not by the author; this version ships the functions and the rule, not the publication step
-(juridicator SECURITY.md R3). See docs/AUDIT-LOTTERY.md.
+fixed by the ledger, not by the author: see lottery_book.py for the publication step, and docs/AUDIT-LOTTERY.md.
 
 Rules fixed here: tier 3 is always selected; the tier is clamped to 0..3; the rate never falls below 2% whatever a policy
 file says, so no tier can be configured into never being audited.

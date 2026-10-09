@@ -5,6 +5,7 @@ the exit code does not change because the gate under test was found wanting.
   python3 -m wounder sensitivity --statement-file F --oracle toy --repo R --head SHA --class gate --out DIR
   python3 -m wounder manifest --checks mechanical.canary --repo R --head SHA --class gate --out DIR
   python3 -m wounder lottery select --salt-file F --head SHA --tier 1
+  python3 -m wounder lottery commit-body --salt-file F | reveal-body --salt-file F | plan --ledger L
   python3 -m wounder promote proposed/<file>.json --reviewed-by NAME
 """
 
@@ -20,7 +21,7 @@ from collections import Counter
 
 from vendor.juridicator_evidence import KIND, validate
 
-from . import ai_boundary, canary, sampler
+from . import ai_boundary, canary, lottery_book, sampler
 from .records import BadInput, PRODUCER, case_ref, check_command, manifest_declared
 from .sensitivity import CommandOracle, sensitivity_probe, toy_oracle
 
@@ -158,7 +159,19 @@ def _lottery(a: argparse.Namespace) -> int:
                 fh.write(salt + "\n")
             print(json.dumps({"commitment": sampler.commit_salt(salt), "salt_file": a.out}))
             return 0
+        if a.action == "plan":
+            with open(a.ledger, encoding="utf-8") as fh:
+                entries = [json.loads(line) for line in fh if line.strip()]
+            rates = tuple(float(x) for x in a.rates.split(",")) if a.rates else sampler.DEFAULT_RATES
+            print(json.dumps(lottery_book.audit_plan(entries, rates), indent=2, sort_keys=True))
+            return 0
         salt = _read_salt(a.salt_file)
+        if a.action == "commit-body":
+            print(json.dumps({"commitment": sampler.commit_salt(salt)}))
+            return 0
+        if a.action == "reveal-body":
+            print(json.dumps({"salt": salt}))
+            return 0
         if a.action == "commit":
             print(json.dumps({"commitment": sampler.commit_salt(salt)}))
             return 0
@@ -220,6 +233,12 @@ def build_parser() -> argparse.ArgumentParser:
     sel.add_argument("--tier", type=int, required=True)
     sel.add_argument("--commitment")
     sel.add_argument("--rates", help="four comma-separated rates; default 0.05,0.20,0.50,1.00")
+    for name in ("commit-body", "reveal-body"):
+        cb = ls.add_parser(name, help="the JSON body to append to the ledger as lottery_commit / lottery_reveal")
+        cb.add_argument("--salt-file", required=True)
+    pl = ls.add_parser("plan", help="read a ledger and list which accepted cases must be audited")
+    pl.add_argument("--ledger", required=True)
+    pl.add_argument("--rates")
     lot.set_defaults(fn=_lottery)
 
     pr = sub.add_parser("promote", help="a person moves a reviewed proposed case into the corpus")

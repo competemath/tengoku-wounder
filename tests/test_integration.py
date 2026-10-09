@@ -162,3 +162,24 @@ class AgainstTheJuridicator(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@unittest.skipUnless(HAVE, "no sibling tengoku-juridicator checkout")
+class LotteryOnTheRealLedger(unittest.TestCase):
+    def test_commit_verdicts_reveal_through_the_real_hash_chained_ledger(self):
+        from juridicator.ledger import Ledger
+        from wounder import sampler
+        from wounder.lottery_book import audit_plan
+
+        salt = "q" * 32
+        with tempfile.TemporaryDirectory() as d:
+            ledger = Ledger(os.path.join(d, "ledger.jsonl"))
+            ledger.append("lottery_commit", {"commitment": sampler.commit_salt(salt)})
+            heads = [format(i, "040x") for i in range(1, 60)]
+            for h in heads:
+                ledger.append("verdict", {"decision": "ACCEPT", "tier": 1, "case": {"head_sha": h}})
+            ledger.append("lottery_reveal", {"salt": salt})
+            self.assertEqual(ledger.verify(), (True, None))
+            plan = audit_plan(ledger.entries())
+        self.assertEqual(plan["problems"], [])
+        self.assertEqual(plan["must_audit"], sorted(h for h in heads if sampler.select_for_audit(h, salt, 1)))

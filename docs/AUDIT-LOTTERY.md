@@ -37,10 +37,14 @@ an earlier, already revealed one, they would. So: no case is judged under a salt
 
 ## What is shipped, and what is not
 
-Shipped: `draw`, `select_for_audit`, `commit_salt`, `verify_salt`, `new_salt`, the CLI (`lottery new-salt | commit | select`)
-and tests for determinism, independence from other salts, the empirical rate at every tier over 20,000 commits, tier 3,
-clamping, the floor, and tampering with the commitment.
+Shipped: `draw`, `select_for_audit`, `commit_salt`, `verify_salt`, `new_salt`, and the publication half in
+`wounder/lottery_book.py`. The ledger fixes the batches: a `lottery_commit` entry opens one, every ACCEPT verdict written
+while it is open joins it, and a `lottery_reveal` entry closes it. `python3 -m wounder lottery plan --ledger L` reads the
+ledger and lists which accepted cases must be audited. A verdict written when no batch is open is *unbatched* and is
+always listed for audit, so the author cannot slip past the lottery by timing. A wrong salt, a second commit while a
+batch is open, and a reveal with nothing open are reported as problems. `lottery commit-body` and `reveal-body` print the
+JSON to append (with the juridicator's `append` command).
 
-Not shipped: the publication step (writing the commitment into the ledger before a batch, and the reveal after), and the
-custody of the salt between the two. Until that exists the lottery is only as good as the discipline around the salt file
-(it is created with mode 0600 and never overwritten). This is the juridicator's residual risk R3.
+Not shipped: custody of the salt between commit and reveal. Whoever holds the salt can withhold the reveal; a batch that
+stays open is listed as pending, so a missing reveal is visible, but it is not prevented. The salt file is created with mode
+0600 and never overwritten. This is the juridicator's residual risk R3.
