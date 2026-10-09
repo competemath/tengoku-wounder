@@ -1,0 +1,5 @@
+# The corpus and the scope are curated by people. An AI may propose a case; it cannot merge one.
+/.github/                       @mikael-bashir
+/corpus/                        @mikael-bashir
+/docs/ADVERSARIAL-SCOPE.md      @mikael-bashir
+/vendor/                        @mikael-bashir

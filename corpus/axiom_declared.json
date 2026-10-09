@@ -1,0 +1,10 @@
+{
+  "category": "axiom_declared",
+  "description": "A new axiom is declared with the axiom keyword and used to prove a false statement.",
+  "expected": "reject",
+  "files": {
+    "Main.lean": "axiom bad : False\ntheorem one_eq_two : 1 = 2 := bad.elim\n"
+  },
+  "id": "axiom_declared",
+  "why": "A correct gate rejects it because an axiom added by the submission lets anything be proved and is not one of the accepted foundations."
+}

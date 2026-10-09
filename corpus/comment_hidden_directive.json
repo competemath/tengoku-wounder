@@ -1,0 +1,10 @@
+{
+  "category": "comment_hidden_directive",
+  "description": "Forbidden words appear only inside comments, one of them in a nested block comment.",
+  "expected": "accept",
+  "files": {
+    "Main.lean": "-- no axiom, no sorry, no native_decide, nothing unsafe here\n/- implemented_by is only mentioned in this /- nested -/ comment -/\ntheorem two_add_two : 2 + 2 = 4 := rfl\n"
+  },
+  "id": "comment_hidden_directive",
+  "why": "A correct gate accepts it because words inside comments have no effect on the proof, and rejecting them is over-blocking."
+}

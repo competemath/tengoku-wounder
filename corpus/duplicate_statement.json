@@ -1,0 +1,11 @@
+{
+  "category": "duplicate_statement",
+  "description": "The submission restates a theorem that already exists in the library under a new name.",
+  "expected": "reject",
+  "files": {
+    "library.lean": "theorem zero_add_lib (n : Nat) : 0 + n = n := Nat.zero_add n\n",
+    "submission.lean": "theorem zero_add_again (n : Nat) : 0 + n = n := Nat.zero_add n\n"
+  },
+  "id": "duplicate_statement",
+  "why": "A correct gate rejects it because the same claim already exists, and a duplicate adds no content and hides drift."
+}

@@ -1,0 +1,10 @@
+{
+  "category": "known_good",
+  "description": "A small fact closed by plain decide, which is not native_decide.",
+  "expected": "accept",
+  "files": {
+    "Main.lean": "theorem ten_lt_twenty : 10 < 20 := by decide\n"
+  },
+  "id": "good_decide",
+  "why": "A correct gate accepts it because decide is checked by the kernel; matching decide as a substring of native_decide would over-block."
+}

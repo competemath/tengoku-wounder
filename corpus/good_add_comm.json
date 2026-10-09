@@ -1,0 +1,10 @@
+{
+  "category": "known_good",
+  "description": "A short, plain proof of commutativity of addition.",
+  "expected": "accept",
+  "files": {
+    "Main.lean": "theorem add_comm_ok (a b : Nat) : a + b = b + a := Nat.add_comm a b\n"
+  },
+  "id": "good_add_comm",
+  "why": "A correct gate accepts it because nothing in it is defective."
+}

@@ -1,0 +1,10 @@
+{
+  "category": "known_good",
+  "description": "Identifiers that merely contain forbidden words as part of a longer name.",
+  "expected": "accept",
+  "files": {
+    "Main.lean": "def sorryCount (n : Nat) : Nat := n\ntheorem sorryCount_eq (n : Nat) : sorryCount n = n := rfl\ntheorem axiomatic_ok : 1 + 1 = 2 := rfl\n"
+  },
+  "id": "good_keyword_in_identifier",
+  "why": "A correct gate accepts it because sorryCount and axiomatic_ok are ordinary names, not the sorry or axiom commands."
+}

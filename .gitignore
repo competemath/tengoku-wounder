@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.venv/
+# Candidate cases proposed by a machine wait here, locally, until a person promotes them (docs/ADVERSARIAL-SCOPE.md).
+proposed/*.json
+# A held-out slice of the canary corpus that is never published (SECURITY.md, residual risk W2).
+corpus-private/
+out/
+.mutation-work/

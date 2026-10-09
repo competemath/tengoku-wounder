@@ -1,0 +1,10 @@
+{
+  "category": "sorry_hidden_in_term",
+  "description": "A sorry sits inside a nested term of an otherwise complete-looking proof.",
+  "expected": "reject",
+  "files": {
+    "Main.lean": "theorem and_intro' (p q : Prop) (hp : p) : p ∧ q :=\n  ⟨hp, (fun h : q => h) sorry⟩\n"
+  },
+  "id": "sorry_hidden_in_term",
+  "why": "A correct gate rejects it because a sorry anywhere in the proof term, however deep, leaves the theorem unproved."
+}

@@ -1,0 +1,10 @@
+{
+  "category": "native_decide_used",
+  "description": "A fact is closed with native_decide, which trusts compiled code instead of the kernel.",
+  "expected": "reject",
+  "files": {
+    "Main.lean": "theorem pow_ten : 2 ^ 10 = 1024 := by native_decide\n"
+  },
+  "id": "native_decide_used",
+  "why": "A correct gate rejects it because the result rests on the compiler and an extra axiom, not on kernel checking alone."
+}

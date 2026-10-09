@@ -1,0 +1,10 @@
+{
+  "category": "sorry_present",
+  "description": "A theorem is closed with sorry.",
+  "expected": "reject",
+  "files": {
+    "Main.lean": "theorem add_zero_right (n : Nat) : n + 0 = n := sorry\n"
+  },
+  "id": "sorry_present",
+  "why": "A correct gate rejects it because a proof containing sorry proves nothing."
+}

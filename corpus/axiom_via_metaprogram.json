@@ -1,0 +1,10 @@
+{
+  "category": "axiom_via_metaprogram",
+  "description": "An axiom is added by calling the declaration API from a command, so the word axiom never appears as a keyword.",
+  "expected": "reject",
+  "files": {
+    "Main.lean": "import Lean\nopen Lean Elab Command\nelab \"mk_it\" : command => liftCoreM <| addDecl <|\n  .axiomDecl { name := `bad, levelParams := [], type := mkConst ``False, isUnsafe := false }\nmk_it\ntheorem uses_it : False := bad\n"
+  },
+  "id": "axiom_via_metaprogram",
+  "why": "A correct gate rejects it because it checks which axioms the finished proof depends on, not which keywords the text contains."
+}

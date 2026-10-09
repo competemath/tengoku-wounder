@@ -1,0 +1,10 @@
+{
+  "category": "shadowed_name",
+  "description": "A library type name is silently redefined inside a namespace, so later statements mean something else.",
+  "expected": "reject",
+  "files": {
+    "Main.lean": "namespace Tengoku\nabbrev Real := Nat\ntheorem add_comm_real (x y : Real) : x + y = y + x := Nat.add_comm x y\nend Tengoku\n"
+  },
+  "id": "shadowed_name",
+  "why": "A correct gate rejects it because a name that resolves to a new local definition instead of the library one changes what the statements mean."
+}

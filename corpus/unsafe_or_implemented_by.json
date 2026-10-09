@@ -1,0 +1,10 @@
+{
+  "category": "unsafe_or_implemented_by",
+  "description": "An unsafe definition is swapped in behind a definition with implemented_by.",
+  "expected": "reject",
+  "files": {
+    "Main.lean": "unsafe def fastImpl (n : Nat) : Nat := n\n@[implemented_by fastImpl] def slow (n : Nat) : Nat := n + 0\n"
+  },
+  "id": "unsafe_or_implemented_by",
+  "why": "A correct gate rejects it because the compiled behaviour can differ from the logical definition the theorems are about."
+}

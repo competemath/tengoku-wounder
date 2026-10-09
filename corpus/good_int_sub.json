@@ -1,0 +1,10 @@
+{
+  "category": "known_good",
+  "description": "Integer subtraction stated over integers and proved by omega.",
+  "expected": "accept",
+  "files": {
+    "Main.lean": "theorem sub_add_cancel_ok (a b : Int) : a - b + b = a := by omega\n"
+  },
+  "id": "good_int_sub",
+  "why": "A correct gate accepts it because the statement is faithful to its integer reading and the proof is ordinary."
+}

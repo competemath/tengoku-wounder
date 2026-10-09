@@ -1,0 +1,10 @@
+{
+  "category": "statement_type_drift",
+  "description": "Natural-number subtraction truncates, so the formal claim is true where the source claim about integers is false.",
+  "expected": "reject",
+  "files": {
+    "Main.lean": "/-- Source: for integers a < b, a - b < 0. -/\ntheorem sub_neg_nat (a b : Nat) (h : a < b) : a - b = 0 := Nat.sub_eq_zero_of_le h.le\n"
+  },
+  "id": "statement_type_drift",
+  "why": "A correct gate rejects it because the formal statement no longer says what the source says (integers became naturals)."
+}
