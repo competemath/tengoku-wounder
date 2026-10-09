@@ -1,0 +1,25 @@
+{
+  "category": "executable_bit",
+  "description": "A change adds a script with the executable bit set.",
+  "expected": "block",
+  "id": "executable_bit_on_new_script",
+  "input": {
+    "commits": [
+      {
+        "files": {
+          "README.md": "# project\n",
+          "src/a.py": "x = 1\n"
+        }
+      },
+      {
+        "executable": [
+          "src/run.sh"
+        ],
+        "files": {
+          "src/run.sh": "echo hi\n"
+        }
+      }
+    ]
+  },
+  "why": "A correct gate allows only plain file modes, because an executable file added by an agent can be run by a later step."
+}

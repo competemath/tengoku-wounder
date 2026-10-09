@@ -1,0 +1,23 @@
+{
+  "category": "append_only_rewritten",
+  "description": "A change rewrites an earlier line of an append-only log.",
+  "expected": "block",
+  "id": "append_only_log_rewritten",
+  "input": {
+    "commits": [
+      {
+        "files": {
+          "README.md": "# project\n",
+          "logs/run.log": "one\ntwo\n",
+          "src/a.py": "x = 1\n"
+        }
+      },
+      {
+        "files": {
+          "logs/run.log": "one\nTWO\n"
+        }
+      }
+    ]
+  },
+  "why": "A correct gate requires the new content to be the old bytes plus an append, because a log that can be edited is not a record."
+}

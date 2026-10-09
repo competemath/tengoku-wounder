@@ -97,3 +97,48 @@ layer is responsible for, so a gate is judged on what it is for: `static` (a tex
 compile step's axiom collection, which is what sees a `sorry`), `vacuity`, `fidelity` and `tree` (a name shadowed or a
 statement duplicated in the existing tree). The mapping is `LAYERS` in `wounder/canary.py`. Tengoku's content lint, for
 example, rejects an axiom added by a metaprogram and does not read `sorry` at all, on purpose; the `axioms` layer owns that case.
+
+## Agent-security canaries
+
+The same discipline, pointed at the gates that contain our AI agents instead of the gates that accept their output.
+[tengoku-warden](https://github.com/competemath/tengoku-warden) holds those gates: a secret scan for diffs and commit messages, the
+scope check for what a push may touch, the untrusted-content prompt and the one-time verdict marker, the tool-policy checks and
+the environment allowlist. A gate that nobody attacks is a gate nobody knows works, so the wounder plants a known defect in front
+of each and checks that it is blocked, and plants known-good input to check that it is not over-blocked.
+
+**Scope is unchanged, and it is the point.** This tests *our own* gates, the warden's, through copies vendored into
+`vendor/warden/` and pinned to a commit (`vendor/warden/PIN`, with a test that fails on any drift), so the code under test is a
+reviewed, named version and not whatever is installed. There is no live target: no network, no GitHub, no model, no real
+credential. The cases that need a repository build a throwaway one in a temporary directory with every git configuration source
+neutralised and delete it afterwards. Nothing here is a way past anyone else's checks.
+
+| Piece | What it does | Evidence |
+| --- | --- | --- |
+| `wounder/agentsec.py` + `corpus-agent/` | one JSON case per planted defect or known-good input: `{id, category, description, expected: "block"\|"allow", input, why}`; the gates are the warden's functions called through the vendored copies | `mechanical.agent_canary`, one per case, manifest first (`python3 -m wounder agent-canaries --out DIR ...`) |
+| `injection-eval` | records an injection-resistance run (the warden's 32 payloads against a reader backend the operator names, or an existing report) with the rates and their Wilson intervals | `mechanical.injection_eval` |
+| `jail-selftest` | records the warden's escape battery for a jail or runner (an existing report written inside the jail, or `--run` there) | `mechanical.jail_selftest` |
+
+**Categories**: `secret_in_diff`, `secret_in_commit_message`, `symlink_added`, `protected_path_touched`, `executable_bit`,
+`append_only_rewritten`, `human_owned_reverted`, `forged_marker_in_evidence`, `malformed_findings`, `deny_list_only_spawn`,
+`bypass_flag_without_tools`, `env_leak` (each expects `block`) and `known_good` (expects `allow`, one case per surface, so
+over-blocking is noticed everywhere a gate can block). Each is a failure that Tau Ceti's public record shows, tested here against
+the gate meant to prevent it; `wounder/agentsec.py` names the Tau Ceti finding behind each category. A planted case is the smallest
+example of the category, a few lines, never a chain.
+
+**Fixtures never contain a credential.** A value with the shape of a token is written in a case as a placeholder such as
+`{{GITHUB_TOKEN}}` and built at run time by concatenation (`agentsec.fixture_values`). A test scans every file of the corpus with
+the vendored secret scanner and requires that it finds nothing, and checks that the run-time values do have the shape a scanner
+looks for. The gate under test is shown only the category and the input (values expanded), never the expected verdict or the id.
+
+**How to read a result.** `pass`: the gate did what the case expects. `fail`: a missed block (the gate ALLOWED a planted defect) or
+a wrongful block (the gate BLOCKED a known-good case). `inconclusive`: the gate crashed or gave no verdict, which is never a pass.
+A gate that allows everything fails every block case and a gate that blocks everything fails every known-good case; the test suite
+checks both, so the harness cannot go green on a dead gate. The test suite also checks that each block happens for the reason the
+category names (`EXPECTED_REASON`), so a gate that blocks everything for the wrong reason is still noticed.
+
+**Limits.** The cases are public, so they can be memorised (W2); a green run means no known category got through (W1); and it tests
+the pinned copy of the warden, not what is deployed in a repository (W10 in `SECURITY.md`).
+
+Adding a category follows the same steps as above: the smallest example, the expected verdict, a line in `CATEGORIES`/`SURFACES`/
+`EXPECTED_REASON` in `wounder/agentsec.py`, a case file, and a pull request that a code owner reviews (`/corpus-agent/` is owned by
+a person).

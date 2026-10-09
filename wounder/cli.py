@@ -7,6 +7,9 @@ the exit code does not change because the gate under test was found wanting.
   python3 -m wounder lottery select --salt-file F --head SHA --tier 1
   python3 -m wounder lottery commit-body --salt-file F | reveal-body --salt-file F | plan --ledger L
   python3 -m wounder promote proposed/<file>.json --reviewed-by NAME
+  python3 -m wounder agent-canaries --corpus corpus-agent --gate warden --repo R --head SHA --class gate --out DIR
+  python3 -m wounder injection-eval (--backend-cmd CMD --corpus WARDEN/corpus/injection | --report-file F) --target NAME ... --out DIR
+  python3 -m wounder jail-selftest (--report-file F | --run) --target NAME --repo R --head SHA --class gate --out DIR
 """
 
 from __future__ import annotations
@@ -15,17 +18,19 @@ import argparse
 import datetime
 import json
 import os
+import secrets
 import shlex
 import sys
 from collections import Counter
 
 from vendor.juridicator_evidence import KIND, validate
 
-from . import ai_boundary, canary, lottery_book, sampler
+from . import agentsec, ai_boundary, canary, lottery_book, sampler
 from .records import BadInput, PRODUCER, case_ref, check_command, manifest_declared
 from .sensitivity import CommandOracle, sensitivity_probe, toy_oracle
 
-WOUNDER_KINDS = ("mechanical.canary", "mechanical.sensitivity", "reproducible.fuzz")
+WOUNDER_KINDS = ("mechanical.canary", "mechanical.sensitivity", "mechanical.agent_canary", "mechanical.injection_eval",
+                 "mechanical.jail_selftest", "reproducible.fuzz")
 PY = "python3 -m wounder"
 
 
@@ -102,6 +107,98 @@ def _run_canaries(a: argparse.Namespace) -> int:
     counts = Counter(r["outcome"] for r in out if r["kind"] == "mechanical.canary")
     print(json.dumps({"written": writer.n, "directory": a.out, **{k: counts.get(k, 0) for k in ("pass", "fail", "inconclusive")}}))
     return 0
+
+
+def _agent_canaries(a: argparse.Namespace) -> int:
+    case = case_ref(a.repo, a.head, a.cls)
+    a.corpus = a.corpus or ["corpus-agent"]
+    corpus = agentsec.load_corpus(*a.corpus)
+    if a.only:
+        corpus = [c for c in corpus if c["id"] in set(a.only)]
+        if len(corpus) != len(set(a.only)):
+            raise BadInput("--only names a case that is not in the corpus")
+    gate = agentsec.GATES[a.gate]()
+    corpus_part = " ".join("--corpus " + shlex.quote(d) for d in a.corpus)
+    template = (f"{PY} agent-canaries {corpus_part} --gate {a.gate} --repo {shlex.quote(a.repo)} --head {a.head} "
+                f"--class {shlex.quote(a.cls)} --only {{id}} --out rerun")
+    check_command(template.replace("{id}", "x" * 60))
+    writer = Writer(a.out)
+    created = a.created or _now()
+    records = agentsec.run_agent_canaries if a.no_manifest else agentsec.agent_canary_run
+    out = records(corpus, gate, case, dict(PRODUCER), created, template, writer.write)
+    left = agentsec.missing_cases(corpus, out)
+    if left:  # cannot happen in a normal run; if it does, the directory is left without COMPLETE
+        raise BadInput("agent canaries not reported: " + ", ".join(left))
+    writer.complete(f"records={writer.n} corpus_sha256={agentsec.corpus_digest(corpus)} gate={a.gate}")
+    counts = Counter(r["outcome"] for r in out if r["kind"] == "mechanical.agent_canary")
+    print(json.dumps({"written": writer.n, "directory": a.out, **{k: counts.get(k, 0) for k in ("pass", "fail", "inconclusive")}}))
+    return 0
+
+
+def _load_report(path: str) -> dict:
+    try:
+        with open(path, encoding="utf-8") as fh:
+            report = json.load(fh)
+    except (OSError, ValueError) as exc:
+        raise BadInput(f"report file unreadable ({type(exc).__name__})") from exc
+    if not isinstance(report, dict):
+        raise BadInput("the report file is not a JSON object")
+    return report
+
+
+def _write_one(a: argparse.Namespace, kind: str, build) -> int:
+    """Manifest first, then the one record, then COMPLETE (the shape every producer command in this file follows)."""
+    case = case_ref(a.repo, a.head, a.cls)
+    created = a.created or _now()
+    producer = dict(PRODUCER)
+    writer = Writer(a.out)
+    writer.write(manifest_declared(case=case, producer=producer, created=created, checks=[kind],
+                                   extra={"expected": [{"kind": kind, "subject": {"declaration": a.target}}]}))
+    record = build(case, producer, created)
+    writer.write(record)
+    writer.complete(f"records={writer.n}")
+    print(json.dumps({"written": writer.n, "directory": a.out, "outcome": record["outcome"]}))
+    return 0
+
+
+def _injection_eval(a: argparse.Namespace) -> int:
+    case_ref(a.repo, a.head, a.cls)
+    if bool(a.report_file) == bool(a.backend_cmd):
+        raise BadInput("give exactly one of --report-file or --backend-cmd")
+    common = (f"--target {shlex.quote(a.target)} --repo {shlex.quote(a.repo)} --head {a.head} --class {shlex.quote(a.cls)} --out rerun")
+    if a.report_file:
+        report = _load_report(a.report_file)
+        command = f"{PY} injection-eval --report-file {shlex.quote(a.report_file)} {common}"
+    else:
+        if not a.corpus:
+            raise BadInput("--backend-cmd needs --corpus, the warden's corpus/injection directory")
+        ie = agentsec.warden().injection_eval
+        try:
+            payloads = ie.load_payloads(a.corpus)
+            backend = ie.command_backend(a.backend_cmd, a.timeout)
+        except (OSError, ValueError) as exc:
+            raise BadInput(f"injection-eval: {exc}") from exc
+        report = ie.evaluate(backend, payloads, canary=a.canary or "CANARY-" + secrets.token_hex(12)).to_dict()
+        command = (f"{PY} injection-eval --backend-cmd {shlex.quote(a.backend_cmd)} --corpus {shlex.quote(a.corpus)} {common}")
+    return _write_one(a, "mechanical.injection_eval", lambda case, producer, created: agentsec.injection_eval_record(
+        report, case, producer, created, command, target=a.target, model=a.model, family=a.family))
+
+
+def _jail_selftest(a: argparse.Namespace) -> int:
+    case_ref(a.repo, a.head, a.cls)
+    if bool(a.report_file) == bool(a.run):
+        raise BadInput("give exactly one of --report-file or --run")
+    common = f"--target {shlex.quote(a.target)} --repo {shlex.quote(a.repo)} --head {a.head} --class {shlex.quote(a.cls)} --out rerun"
+    if a.report_file:
+        report = _load_report(a.report_file)
+        command = f"{PY} jail-selftest --report-file {shlex.quote(a.report_file)} {common}"
+    else:
+        report = agentsec.selftest_report(canary_files=tuple(a.canary_file), workspace=a.workspace or "", expect_uid=a.expect_uid,
+                                          timeout_is_denied=a.timeout_is_denied, require_linux=a.require_linux)
+        flags = "".join(f" --canary-file {shlex.quote(f)}" for f in a.canary_file) + (" --require-linux" if a.require_linux else "")
+        command = f"{PY} jail-selftest --run{flags} {common}"
+    return _write_one(a, "mechanical.jail_selftest", lambda case, producer, created: agentsec.jail_selftest_record(
+        report, case, producer, created, command, target=a.target))
 
 
 def _sensitivity(a: argparse.Namespace) -> int:
@@ -227,6 +324,40 @@ def build_parser() -> argparse.ArgumentParser:
     _case_args(m)
     m.set_defaults(fn=_manifest)
 
+    ac = sub.add_parser("agent-canaries", help="run the agent-security canaries against the warden's gates (vendored, pinned)")
+    ac.add_argument("--corpus", action="append", default=None, help="a corpus directory; repeat to add a private slice (default: corpus-agent)")
+    ac.add_argument("--gate", choices=sorted(agentsec.GATES), default="warden",
+                    help="warden: the pinned warden gates; allow-all and block-all are test doubles that show the harness notices a dead or over-eager gate")
+    ac.add_argument("--only", action="append", help="run just this case id (repeatable)")
+    ac.add_argument("--no-manifest", action="store_true", help="the manifest was already declared by `manifest`")
+    _case_args(ac)
+    ac.set_defaults(fn=_agent_canaries)
+
+    ie = sub.add_parser("injection-eval", help="record an injection-resistance run of a reader backend (the warden's harness)")
+    ie.add_argument("--report-file", help="a report written by `python3 -m warden injection-eval --json`")
+    ie.add_argument("--backend-cmd", help="run the harness here against this backend command (prompt on stdin, reply on stdout)")
+    ie.add_argument("--corpus", help="the warden's corpus/injection directory (with --backend-cmd)")
+    ie.add_argument("--canary", default="", help="canary string for the run (default: a fresh random one)")
+    ie.add_argument("--target", default="reviewer", help="name of the backend or reader under test (the record's subject)")
+    ie.add_argument("--model", help="the model behind the backend (default: the target name)")
+    ie.add_argument("--family")
+    ie.add_argument("--timeout", type=float, default=600.0)
+    _case_args(ie)
+    ie.set_defaults(fn=_injection_eval)
+
+    js = sub.add_parser("jail-selftest", help="record the warden's escape-vector battery for a jail or runner")
+    js.add_argument("--report-file", help="a report written inside the jail by `python3 -m warden selftest --json OUT`")
+    js.add_argument("--run", action="store_true",
+                    help="run the battery HERE; only inside the jail or runner being tested, because the probes really try to leave it")
+    js.add_argument("--target", default="jail", help="name of the jail or runner (the record's subject)")
+    js.add_argument("--canary-file", action="append", default=[], help="a host file that must be unreadable (with --run)")
+    js.add_argument("--workspace")
+    js.add_argument("--expect-uid", type=int)
+    js.add_argument("--timeout-is-denied", action="store_true")
+    js.add_argument("--require-linux", action="store_true")
+    _case_args(js)
+    js.set_defaults(fn=_jail_selftest)
+
     lot = sub.add_parser("lottery", help="audit sampling with a committed salt")
     ls = lot.add_subparsers(dest="action", required=True)
     n = ls.add_parser("new-salt")
@@ -260,7 +391,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return args.fn(args)
-    except (BadInput, canary.CorpusError) as exc:
+    except (BadInput, canary.CorpusError, agentsec.AgentCorpusError) as exc:
         print(f"wounder: bad input: {exc}", file=sys.stderr)
         return 2
     except (ValueError, FileExistsError) as exc:

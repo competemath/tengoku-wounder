@@ -1,0 +1,17 @@
+{
+  "category": "malformed_findings",
+  "description": "A reply gives a boolean where a line number belongs.",
+  "expected": "block",
+  "id": "malformed_findings_boolean_line",
+  "input": {
+    "findings": [
+      {
+        "category": "style",
+        "line": true,
+        "severity": "info",
+        "title": "t"
+      }
+    ]
+  },
+  "why": "A correct gate refuses a boolean posing as an integer, because Python treats true as 1 unless the check is exact."
+}

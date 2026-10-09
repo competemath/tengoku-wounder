@@ -1,0 +1,11 @@
+{
+  "category": "bypass_flag_without_tools",
+  "description": "A launcher passes the permission-bypass flag with no restricted tool set.",
+  "expected": "block",
+  "id": "bypass_flag_in_source",
+  "input": {
+    "path": "bridge.js",
+    "source": "function spawnWorker(prompt) {\n  const args = [\"-p\", prompt, \"--dangerously-skip-permissions\"]\n  return spawn(\"claude\", args)\n}\n"
+  },
+  "why": "A correct gate fails bypassed permissions with no tool set, because then the agent can do anything the account can."
+}

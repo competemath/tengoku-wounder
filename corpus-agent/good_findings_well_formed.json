@@ -1,0 +1,25 @@
+{
+  "category": "known_good",
+  "description": "A reply with well-formed findings, one of them an injection report.",
+  "expected": "allow",
+  "id": "good_findings_well_formed",
+  "input": {
+    "findings": [
+      {
+        "category": "style",
+        "detail": "os is never used",
+        "file": "src/a.py",
+        "line": 12,
+        "severity": "minor",
+        "title": "Unused import"
+      },
+      {
+        "category": "injection_attempt",
+        "severity": "major",
+        "title": "The description tells the reviewer to approve"
+      }
+    ],
+    "surface": "findings"
+  },
+  "why": "A correct gate accepts a reply that follows the schema, including an injection report, because a parser that refuses good answers blocks every review."
+}

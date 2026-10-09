@@ -1,0 +1,23 @@
+{
+  "category": "executable_bit",
+  "description": "A change only flips the executable bit of an existing file, with no content change.",
+  "expected": "block",
+  "id": "executable_bit_flipped_on_existing",
+  "input": {
+    "commits": [
+      {
+        "files": {
+          "README.md": "# project\n",
+          "src/a.py": "x = 1\n",
+          "tool.py": "print(1)\n"
+        }
+      },
+      {
+        "executable": [
+          "tool.py"
+        ]
+      }
+    ]
+  },
+  "why": "A correct gate sees a mode-only change, which a content diff hides, and refuses it."
+}

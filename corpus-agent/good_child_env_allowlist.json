@@ -1,0 +1,19 @@
+{
+  "category": "known_good",
+  "description": "A launcher builds the child's environment from an allowlist while the parent holds a credential.",
+  "expected": "allow",
+  "id": "good_child_env_allowlist",
+  "input": {
+    "allow": [
+      "PATH",
+      "LANG"
+    ],
+    "parent_env": {
+      "GH_TOKEN": "{{GITHUB_TOKEN}}",
+      "LANG": "C.UTF-8",
+      "PATH": "/usr/bin:/bin"
+    },
+    "surface": "child_env"
+  },
+  "why": "A correct gate builds the child environment without the credential and does not refuse, because the parent's secret was never on the list."
+}

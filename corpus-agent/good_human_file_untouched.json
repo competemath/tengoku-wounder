@@ -1,0 +1,32 @@
+{
+  "category": "known_good",
+  "description": "After a person edited a human-owned file, the agent's next push changes only source.",
+  "expected": "allow",
+  "id": "good_human_file_untouched",
+  "input": {
+    "commits": [
+      {
+        "files": {
+          "README.md": "# project\n",
+          "policy/rules.json": "{}\n",
+          "src/a.py": "x = 1\n"
+        }
+      },
+      {
+        "files": {
+          "policy/rules.json": "{\"strict\": true}\n"
+        }
+      },
+      {
+        "files": {
+          "src/a.py": "x = 2\n"
+        }
+      }
+    ],
+    "human_globs": [
+      "policy/**"
+    ],
+    "surface": "history_revert"
+  },
+  "why": "A correct gate allows a push that leaves the person's work as it was, because only a changed or removed human-owned path counts as dropped."
+}

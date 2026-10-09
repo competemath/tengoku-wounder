@@ -67,3 +67,9 @@ been through an outside audit.
 
 That a healthy canary run means the gate is correct. It means the gate still catches every defect we have thought to plant,
 still accepts every good case we have thought to include, and that the evidence for both can be re-run by anyone.
+- **W10 The agent-security canaries test a pinned copy.** `corpus-agent/` runs against the warden code vendored in `vendor/warden/` at
+  the commit in `vendor/warden/PIN`, not against what a repository has installed or wired in; a green run says the pinned gates hold
+  against the known categories, and the wiring is what `docs/STATUS.md` in the warden tracks. The vendored `selftest` module opens
+  sockets by design: `jail-selftest --run` is only for use inside the jail or runner being tested (W3), and tests never run it.
+  Registering the vendored package as `warden` in `sys.modules` (so the modules' lazy `warden.*` imports find the pinned copies) is a
+  process-wide effect of the first call to `agentsec.warden()`; do not mix it with an installed `warden` in the same process.

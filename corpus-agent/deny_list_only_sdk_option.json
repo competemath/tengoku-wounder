@@ -1,0 +1,11 @@
+{
+  "category": "deny_list_only_spawn",
+  "description": "A launcher using the SDK passes disallowedTools and no tools option.",
+  "expected": "block",
+  "id": "deny_list_only_sdk_option",
+  "input": {
+    "path": "run.mjs",
+    "source": "export async function review(prompt) {\n  return query({ prompt, options: { disallowedTools: [\"Bash\"] } })\n}\n"
+  },
+  "why": "A correct gate recognises the option form of the same mistake, because the SDK spelling is no safer than the flag."
+}

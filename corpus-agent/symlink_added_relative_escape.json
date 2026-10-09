@@ -1,0 +1,22 @@
+{
+  "category": "symlink_added",
+  "description": "A change adds a relative link that climbs out of the repository.",
+  "expected": "block",
+  "id": "symlink_added_relative_escape",
+  "input": {
+    "commits": [
+      {
+        "files": {
+          "README.md": "# project\n",
+          "src/a.py": "x = 1\n"
+        }
+      },
+      {
+        "symlinks": {
+          "src/data": "../../outside"
+        }
+      }
+    ]
+  },
+  "why": "A correct gate refuses any symbolic link, not only absolute ones, because a relative target can leave the tree too."
+}

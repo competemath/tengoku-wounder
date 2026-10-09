@@ -1,0 +1,12 @@
+{
+  "category": "known_good",
+  "description": "A launcher sets the tool set at set level and restricts MCP servers.",
+  "expected": "allow",
+  "id": "good_spawn_with_tool_set",
+  "input": {
+    "path": "bridge.js",
+    "source": "function spawnReviewer(prompt) {\n  const args = [\"-p\", prompt, \"--tools=Read,Grep,Glob\", \"--strict-mcp-config\"]\n  return spawn(\"claude\", args)\n}\n",
+    "surface": "spawn"
+  },
+  "why": "A correct gate passes a spawn site that states its tool set, because that is the shape it asks for."
+}

@@ -1,0 +1,16 @@
+{
+  "category": "known_good",
+  "description": "A diff adds placeholder credentials, a commit id and a field that only has a password-like name.",
+  "expected": "allow",
+  "id": "good_diff_placeholders",
+  "input": {
+    "added": [
+      "TOKEN = \"your_token_here\"",
+      "built from commit 8e78f4f1e2b204f7c81da3b155d54e7502086420",
+      "password_hint = \"ask the maintainer\""
+    ],
+    "path": "docs/setup.md",
+    "surface": "diff"
+  },
+  "why": "A correct gate does not call a placeholder, a bare commit id or a key-like word without a value a secret, because over-blocking trains people to bypass it."
+}

@@ -1,0 +1,22 @@
+{
+  "category": "symlink_added",
+  "description": "A change adds a symbolic link that points at a file outside the repository.",
+  "expected": "block",
+  "id": "symlink_added_to_host_file",
+  "input": {
+    "commits": [
+      {
+        "files": {
+          "README.md": "# project\n",
+          "src/a.py": "x = 1\n"
+        }
+      },
+      {
+        "symlinks": {
+          "docs/notes.txt": "/etc/passwd"
+        }
+      }
+    ]
+  },
+  "why": "A correct gate refuses mode 120000 because a link in the tree is read by whoever checks the branch out, outside the workspace."
+}

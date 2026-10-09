@@ -1,0 +1,17 @@
+{
+  "category": "malformed_findings",
+  "description": "A reply names an absolute path as the file of a finding.",
+  "expected": "block",
+  "id": "malformed_findings_absolute_path",
+  "input": {
+    "findings": [
+      {
+        "category": "style",
+        "file": "/etc/passwd",
+        "severity": "minor",
+        "title": "t"
+      }
+    ]
+  },
+  "why": "A correct gate refuses absolute paths in findings, because a later step may open the file a finding names."
+}

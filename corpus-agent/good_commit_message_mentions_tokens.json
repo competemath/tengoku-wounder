@@ -1,0 +1,11 @@
+{
+  "category": "known_good",
+  "description": "A commit message talks about tokens and cites a commit id.",
+  "expected": "allow",
+  "id": "good_commit_message_mentions_tokens",
+  "input": {
+    "message": "Rotate the API token handling\n\nDocument how tokens are passed to the launcher; see commit 8e78f4f1e2b204f7c81da3b155d54e7502086420.",
+    "surface": "commit_message"
+  },
+  "why": "A correct gate allows prose about credentials that contains none, because the word token is not a token."
+}

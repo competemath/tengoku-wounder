@@ -1,0 +1,17 @@
+{
+  "category": "env_leak",
+  "description": "A launcher puts a credential variable on the child's allowlist.",
+  "expected": "block",
+  "id": "env_leak_token_name_allowlisted",
+  "input": {
+    "allow": [
+      "PATH",
+      "GH_TOKEN"
+    ],
+    "parent_env": {
+      "GH_TOKEN": "{{GITHUB_TOKEN}}",
+      "PATH": "/usr/bin:/bin"
+    }
+  },
+  "why": "A correct gate refuses a credential-looking name in the allowlist, so adding it by mistake is an error and not a leak."
+}

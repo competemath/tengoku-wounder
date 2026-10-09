@@ -1,0 +1,23 @@
+{
+  "category": "append_only_rewritten",
+  "description": "A change deletes an append-only log.",
+  "expected": "block",
+  "id": "append_only_log_deleted",
+  "input": {
+    "commits": [
+      {
+        "files": {
+          "README.md": "# project\n",
+          "logs/run.log": "one\ntwo\n",
+          "src/a.py": "x = 1\n"
+        }
+      },
+      {
+        "delete": [
+          "logs/run.log"
+        ]
+      }
+    ]
+  },
+  "why": "A correct gate refuses deleting an append-only file, because removal is the strongest rewrite."
+}

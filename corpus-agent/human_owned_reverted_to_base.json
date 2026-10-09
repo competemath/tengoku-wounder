@@ -1,0 +1,31 @@
+{
+  "category": "human_owned_reverted",
+  "description": "After a person edited a human-owned file, the agent's next push puts the old content back.",
+  "expected": "block",
+  "id": "human_owned_reverted_to_base",
+  "input": {
+    "commits": [
+      {
+        "files": {
+          "README.md": "# project\n",
+          "policy/rules.json": "{}\n",
+          "src/a.py": "x = 1\n"
+        }
+      },
+      {
+        "files": {
+          "policy/rules.json": "{\"strict\": true}\n"
+        }
+      },
+      {
+        "files": {
+          "policy/rules.json": "{}\n"
+        }
+      }
+    ],
+    "human_globs": [
+      "policy/**"
+    ]
+  },
+  "why": "A correct gate compares the previous head with the new head, because a revert to the base looks like no change at all in base..head."
+}

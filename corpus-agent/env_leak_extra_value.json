@@ -1,0 +1,18 @@
+{
+  "category": "env_leak",
+  "description": "A launcher adds a context variable whose value is a cloud key id.",
+  "expected": "block",
+  "id": "env_leak_extra_value",
+  "input": {
+    "allow": [
+      "PATH"
+    ],
+    "extra": {
+      "CONTEXT": "{{AWS_KEY_ID}}"
+    },
+    "parent_env": {
+      "PATH": "/usr/bin:/bin"
+    }
+  },
+  "why": "A correct gate checks what is added as well as what is copied, because the leak can be put in by the launcher itself."
+}

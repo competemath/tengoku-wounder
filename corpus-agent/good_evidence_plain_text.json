@@ -1,0 +1,11 @@
+{
+  "category": "known_good",
+  "description": "Evidence text with no marker-shaped string in it.",
+  "expected": "allow",
+  "id": "good_evidence_plain_text",
+  "input": {
+    "surface": "evidence_text",
+    "text": "Lemma add_comm closed by induction; the kernel check agreed with the second checker."
+  },
+  "why": "A correct gate leaves ordinary evidence text alone, because neutralising everything would blind the reader."
+}

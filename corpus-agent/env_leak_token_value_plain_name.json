@@ -1,0 +1,17 @@
+{
+  "category": "env_leak",
+  "description": "A variable with a harmless name holds a provider key.",
+  "expected": "block",
+  "id": "env_leak_token_value_plain_name",
+  "input": {
+    "allow": [
+      "PATH",
+      "NOTES"
+    ],
+    "parent_env": {
+      "NOTES": "{{ANTHROPIC_KEY}}",
+      "PATH": "/usr/bin:/bin"
+    }
+  },
+  "why": "A correct gate looks at values as well as names, because a secret does not have to be called a secret."
+}

@@ -1,0 +1,10 @@
+{
+  "category": "malformed_findings",
+  "description": "A reply repeats the verdict key with different values.",
+  "expected": "block",
+  "id": "malformed_findings_duplicate_verdict",
+  "input": {
+    "raw": "{\"verdict\": \"approve\", \"verdict\": \"block\", \"summary\": \"s\", \"findings\": []}"
+  },
+  "why": "A correct gate refuses duplicate keys, because two parsers can disagree about which value wins."
+}

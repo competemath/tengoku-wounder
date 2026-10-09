@@ -1,0 +1,10 @@
+{
+  "category": "malformed_findings",
+  "description": "A reply puts text where the list of findings belongs.",
+  "expected": "block",
+  "id": "malformed_findings_not_a_list",
+  "input": {
+    "findings": "no findings"
+  },
+  "why": "A correct gate rejects the reply as an error that blocks, because a parser that only checks the verdict word can crash on this."
+}

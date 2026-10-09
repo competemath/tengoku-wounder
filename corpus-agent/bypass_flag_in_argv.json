@@ -1,0 +1,16 @@
+{
+  "category": "bypass_flag_without_tools",
+  "description": "An argv built for the agent skips permissions and sets no tool set.",
+  "expected": "block",
+  "id": "bypass_flag_in_argv",
+  "input": {
+    "argv": [
+      "claude",
+      "-p",
+      "review this",
+      "--dangerously-skip-permissions",
+      "--strict-mcp-config"
+    ]
+  },
+  "why": "A correct gate checks the argv that is actually built, because a test that pins flags records an exposure and does not remove it."
+}

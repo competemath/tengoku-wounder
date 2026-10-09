@@ -1,0 +1,11 @@
+{
+  "category": "deny_list_only_spawn",
+  "description": "A launcher builds the agent's argv with a deny-list and no tool set.",
+  "expected": "block",
+  "id": "deny_list_only_node_bridge",
+  "input": {
+    "path": "bridge.js",
+    "source": "function spawnReviewer(prompt) {\n  const args = [\"-p\", prompt, \"--output-format\", \"stream-json\"]\n  args.push(\"--disallowedTools\", \"WebSearch\", \"WebFetch\")\n  return spawn(\"claude\", args)\n}\n"
+  },
+  "why": "A correct gate fails a spawn site that relies on a deny-list, because a deny-list leaves every tool nobody named, and a new built-in is one."
+}
